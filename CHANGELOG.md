@@ -1,5 +1,9 @@
 # PIMGento 2 API change Log
 
+### [2.0.1] - 2020-01-04
+# Fixed
+- Remove version in composer.json
+
 ### [2.0.0] - 2020-01-04
 # Added
 - Import image button [#41](https://gitlab-si.cordonweb.com/webagency/pim/PIMGento/issues/41)
