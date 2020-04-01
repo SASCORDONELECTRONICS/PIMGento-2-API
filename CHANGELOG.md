@@ -1,5 +1,9 @@
 # PIMGento 2 API change Log
 
+# Added
+- Import image button [#41](https://gitlab-si.cordonweb.com/webagency/pim/PIMGento/issues/41)
+- Import Image process [#44](https://gitlab-si.cordonweb.com/webagency/pim/PIMGento/issues/44)
+
 ### 100.1.1 :
 Add Magento 2.3 compatibility
 

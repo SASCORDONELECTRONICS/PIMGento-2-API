@@ -23,6 +23,7 @@
                 <item name="product_model" xsi:type="string">\Pimgento\Api\Job\ProductModel</item>
                 <item name="family_variant" xsi:type="string">\Pimgento\Api\Job\FamilyVariant</item>
                 <item name="product" xsi:type="string">\Pimgento\Api\Job\Product</item>
+                <item name="image" xsi:type="string">\Pimgento\Api\Job\Image</item>
             </argument>
         </arguments>
     </type>
@@ -380,6 +381,46 @@
                     <item name="24" xsi:type="array">
                         <item name="method" xsi:type="string">cleanCache</item>
                         <item name="comment" xsi:type="string">Clean cache</item>
+                    </item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Pimgento\Api\Job\Image">
+        <arguments>
+            <argument name="data" xsi:type="array">
+                <item name="steps" xsi:type="array">
+                    <item name="1" xsi:type="array">
+                        <item name="method" xsi:type="string">createTable</item>
+                        <item name="comment" xsi:type="string">Create the Image temporary tables</item>
+                    </item>
+                    <item name="2" xsi:type="array">
+                        <item name="method" xsi:type="string">insertProductData</item>
+                        <item name="comment" xsi:type="string">Insert product into temporary tables</item>
+                    </item>
+                    <item name="3" xsi:type="array">
+                        <item name="method" xsi:type="string">importForkedAttributeOptions</item>
+                        <item name="comment" xsi:type="string">Import options for forked metric attributes</item>
+                    </item>
+                    <item name="4" xsi:type="array">
+                        <item name="method" xsi:type="string">addRequiredData</item>
+                        <item name="comment" xsi:type="string">Enrich temporary tables before processing</item>
+                    </item>
+                    <item name="5" xsi:type="array">
+                        <item name="method" xsi:type="string">mapAttributesForSimpleProducts</item>
+                        <item name="comment" xsi:type="string">Map PIM attributes to Magento attributes for simple products</item>
+                    </item>
+                    <item name="7" xsi:type="array">
+                        <item name="method" xsi:type="string">matchEntities</item>
+                        <item name="comment" xsi:type="string">Match code with Magento ID</item>
+                    </item>
+                    <item name="8" xsi:type="array">
+                        <item name="method" xsi:type="string">importImages</item>
+                        <item name="comment" xsi:type="string">Import image</item>
+                    </item>
+                    <item name="9" xsi:type="array">
+                        <item name="method" xsi:type="string">dropTable</item>
+                        <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
                 </item>
             </argument>

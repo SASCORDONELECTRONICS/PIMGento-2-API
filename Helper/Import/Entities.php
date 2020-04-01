@@ -409,6 +409,48 @@ class Entities extends AbstractHelper
         return $this;
     }
 
+    public function matchEntitiesForImage($pimKey, $entityTable, $entityKey, $import, $prefix = null)
+    {
+        /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
+        $connection = $this->connection;
+        /** @var string $tableName */
+        $tableName = $this->getTableName($import);
+
+        $connection->delete($tableName, [$pimKey . ' = ?' => '']);
+        /** @var string $pimgentoTable */
+        $pimgentoTable = $this->getTable('pimgento_entities');
+        /** @var string $entityTable */
+        $entityTable = $this->getTable($entityTable);
+
+        if ($entityKey == 'entity_id') {
+            $entityKey = $this->getColumnIdentifier($entityTable);
+        }
+
+        /* Update entity_id column from pimgento_entities table */
+        $connection->query('
+            UPDATE `' . $tableName . '` t
+            SET `_entity_id` = (
+                SELECT `entity_id` FROM `' . $pimgentoTable . '` c
+                WHERE ' . ($prefix ? 'CONCAT(t.`' . $prefix . '`, "_", t.`' . $pimKey . '`)' : 't.`' . $pimKey . '`') . ' = c.`code`
+                    AND c.`import` = "product"
+            )
+        ');
+
+        /* Set entity_id for new entities */
+        /** @var string $query */
+        $query = $connection->query('SHOW TABLE STATUS LIKE "' . $entityTable . '"');
+        /** @var mixed $row */
+        $row = $query->fetch();
+
+        $connection->query('SET @id = ' . (int)$row['Auto_increment']);
+        /** @var array $values */
+        $values = [
+            '_entity_id' => new Expr('@id := @id + 1'),
+            '_is_new' => new Expr('1'),
+        ];
+        $connection->update($tableName, $values, '_entity_id IS NULL');
+    }
+
     /**
      * Set values to attributes
      *
