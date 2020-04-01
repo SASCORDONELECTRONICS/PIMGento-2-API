@@ -1,5 +1,7 @@
 ![PIMGento2](doc/pimgento2-api-logo.png)
 
+This fork was created to adapt Pimgento2 to the needs of Cordon Electronices. The goal is to allow Magento configurables to be imported not necessarily from the parents of PIM products, but if need be from their grandparents.
+
 # PIMGento2 (API)
 
 PIMGento2 (API) is a Magento 2 extension that allows you to import your catalog from Akeneo API into Magento.

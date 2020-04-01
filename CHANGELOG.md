@@ -1,5 +1,6 @@
 # PIMGento 2 API change Log
 
+### [2.0.0] - 2020-01-04
 # Added
 - Import image button [#41](https://gitlab-si.cordonweb.com/webagency/pim/PIMGento/issues/41)
 - Import Image process [#44](https://gitlab-si.cordonweb.com/webagency/pim/PIMGento/issues/44)
