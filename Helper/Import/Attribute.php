@@ -181,6 +181,7 @@ class Attribute extends AbstractHelper
 
         /** @var DataObject $response */
         $response = new DataObject();
+        $response->setData('types', $types);
         $response->setTypes($types);
 
         $this->_eventManager->dispatch(

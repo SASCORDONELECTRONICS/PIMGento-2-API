@@ -26,6 +26,10 @@ class Product extends Entities
      * @var string VALUES_KEY
      */
     const VALUES_KEY = 'values';
+    /**
+     * @var string METRIC_UNIT_SEPARATOR
+     */
+    const METRIC_UNIT_SEPARATOR = ' ';
 
     /**
      * Get columns from the api result
@@ -124,7 +128,7 @@ class Product extends Entities
                 }
                 // Attribute is a metric
                 if (array_key_exists('amount', $attributeValue['data'])) {
-                    $columns[$key] = $attributeValue['data']['amount'];
+                    $columns[$key] = $attributeValue['data']['amount'] . self::METRIC_UNIT_SEPARATOR . $attributeValue['data']['unit'];
 
                     continue;
                 }

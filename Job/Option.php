@@ -101,6 +101,7 @@ class Option extends Import
      * @param OutputHelper      $outputHelper
      * @param ManagerInterface  $eventManager
      * @param Authenticator     $authenticator
+     * @param \Psr\Log\LoggerInterface $logger
      * @param EntitiesHelper    $entitiesHelper
      * @param ConfigHelper      $configHelper
      * @param Config            $eavConfig
@@ -116,6 +117,7 @@ class Option extends Import
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
+        \Psr\Log\LoggerInterface $logger,
         EntitiesHelper $entitiesHelper,
         ConfigHelper $configHelper,
         Config $eavConfig,
@@ -125,7 +127,7 @@ class Option extends Import
         EavSetup $eavSetup,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $logger, $data);
 
         $this->entitiesHelper  = $entitiesHelper;
         $this->configHelper    = $configHelper;
@@ -147,6 +149,9 @@ class Option extends Import
         $attributes = $this->akeneoClient->getAttributeApi()->all();
         /** @var bool $hasOptions */
         $hasOptions = false;
+
+        // Does at least one of the attributes have options?
+
         /** @var array $attribute */
         foreach ($attributes as $attribute) {
             if ($attribute['type'] == 'pim_catalog_multiselect' || $attribute['type'] == 'pim_catalog_simpleselect') {
@@ -163,6 +168,9 @@ class Option extends Import
 
             return;
         }
+
+        // Get a sample and create the table.
+
         /** @var array $option */
         $option = $options->getItems();
         if (empty($option)) {
@@ -201,16 +209,24 @@ class Option extends Import
 
     /**
      * Match code with entity
+     * The pimgento_entities table keeps track of PIM objects that are already mapped to magento entities,
+     * based on their code (e.g. "brand_MAR_ACE_ACER").
+     * It makes sure new rows found in tmp_pimgento_entities_option are identified as such and assigned
+     * an _entity_id (= pimgento_entities.entity_id) that is consistent with the sequence of the table into which they must ultimately be written
+     * (eav_attribute_option).
      *
      * @return void
      */
     public function matchEntities()
     {
+        // Insert new options to pimgento_entities table and prepare eav_attribute_option table for insertions.
+
         $this->entitiesHelper->matchEntity('code', 'eav_attribute_option', 'option_id', $this->getCode(), 'attribute');
     }
 
     /**
-     * Insert Option
+     * Insert Option into eav_attribute_option.
+     * This table references all options, tying each of them to a specific attribute, as listed in eav_attribute.
      *
      * @return void
      */
@@ -236,6 +252,7 @@ class Option extends Import
                     'attribute_id' => 'b.entity_id',
                 ]
             );
+
         $connection->query(
             $connection->insertFromSelect(
                 $options,
@@ -247,7 +264,9 @@ class Option extends Import
     }
 
     /**
-     * Insert Values
+     * Insert Values into eav_attribute_option.
+     * This table provides "human-readable" values for each of the options listed
+     * in eav_attribute_option, while assigning them to a store.
      *
      * @return void
      */

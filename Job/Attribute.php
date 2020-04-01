@@ -93,6 +93,7 @@ class Attribute extends Import
      * @param OutputHelper $outputHelper
      * @param ManagerInterface $eventManager
      * @param Authenticator $authenticator
+     * @param \Psr\Log\LoggerInterface $logger
      * @param EntitiesHelper $entitiesHelper
      * @param ConfigHelper $configHelper
      * @param Config $eavConfig
@@ -106,6 +107,7 @@ class Attribute extends Import
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
+        \Psr\Log\LoggerInterface $logger,
         EntitiesHelper $entitiesHelper,
         ConfigHelper $configHelper,
         Config $eavConfig,
@@ -115,7 +117,7 @@ class Attribute extends Import
         EavSetup $eavSetup,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $logger, $data);
 
         $this->entitiesHelper  = $entitiesHelper;
         $this->configHelper    = $configHelper;
@@ -124,6 +126,7 @@ class Attribute extends Import
         $this->cacheTypeList   = $cacheTypeList;
         $this->storeHelper     = $storeHelper;
         $this->eavSetup        = $eavSetup;
+        $this->logger          = $logger;
     }
 
     /**
@@ -175,6 +178,12 @@ class Attribute extends Import
 
     /**
      * Match code with entity
+     * The pimgento_entities table keeps track of PIM objects that are already mapped to magento entities,
+     * based on their code (e.g. "capacity").
+     * It makes sure new rows found in tmp_pimgento_entities_attribute are identified as such and assigned
+     * an _entity_id (= pimgento_entities.entity_id) that is consistent with the sequence of the table into which they must ultimately be written
+     * (eav_attribute).
+     *
      *
      * @return void
      */
@@ -191,6 +200,8 @@ class Attribute extends Import
                 'entity_id' => 'attribute_id',
             ]
         )->where('entity_type_id = ?', $this->getEntityTypeId());
+        // entity_type_id=4 restricts results to attributes applicable to catalog products.
+
 
         $connection->query(
             $connection->insertFromSelect(
@@ -206,6 +217,8 @@ class Attribute extends Import
 
     /**
      * Match type with Magento logic
+     * Map each PIM type to an array of values on the Magento side:
+     * backend_type, frontend_input, backend_model, source_model, frontend_model
      *
      * @return void
      */
@@ -233,6 +246,8 @@ class Attribute extends Import
                 array_keys($columns)
             )
         );
+
+        //  $data contains K=>V pairs of _entity_id => whole_row
         /** @var array $data */
         $data = $connection->fetchAssoc($select);
         /**
@@ -240,15 +255,21 @@ class Attribute extends Import
          * @var array $attribute
          */
         foreach ($data as $id => $attribute) {
+
+            // Look up how PIM types are to be mapped to magento types.
+            // This informs the following columns of tmp_magento_entities_attribute:
+            // backend_type, frontend_input, backend_model, source_model, frontend_model
+
             /** @var array $type */
             $type = $this->attributeHelper->getType($attribute['type']);
-
             $connection->update($tmpTable, $type, ['_entity_id = ?' => $id]);
         }
     }
 
     /**
      * Match family code with Magento group id
+     * Ensure that, on the Magento side, attributes are connected to the relevant family, e.g. "phone", "computer"...
+     * Some attributes might be relevant to certain families but not to others.
      *
      * @return void
      */
@@ -264,6 +285,7 @@ class Attribute extends Import
         $connection->addColumn($tmpTable, '_attribute_set_id', 'text');
         /** @var string $importTmpTable */
         $importTmpTable = $connection->select()->from($tmpTable, ['code', '_entity_id']);
+        // Example row: code=>capacity; _entity_id=>141
         /** @var string $queryTmpTable */
         $queryTmpTable = $connection->query($importTmpTable);
 
@@ -283,6 +305,8 @@ class Attribute extends Import
             }
             $attributeIds = rtrim($attributeIds, ',');
 
+            // tmp_pimgento_entities_attribute._attribute_set_id contains a list of families ("phone, "computer", etc.)
+            // to which the attribute is relevant.
             $connection->update($tmpTable, ['_attribute_set_id' => $attributeIds], '_entity_id=' . $row['_entity_id']);
         }
     }
@@ -294,6 +318,7 @@ class Attribute extends Import
      */
     public function addAttributes()
     {
+        // Preparing to add columns not present in the tmp table but necessary in eav_attribute
         /** @var array $columns */
         $columns = $this->attributeHelper->getSpecificColumns();
         /** @var AdapterInterface $connection */
@@ -307,18 +332,34 @@ class Attribute extends Import
 
         while (($row = $query->fetch())) {
             /* Insert base data (ignore if already exists) */
+
+            // Attributes are inserted into 2 distinct tables:
+            // eav_attribute, catalog_eav_attribute
+            //
+            // catalog_eav_attribute is an extension of the eav_attribute table.
+            // The eav_attribute table contains only the general data for all the attributes of all the EAV entities
+            // (category, product, customer, customer address, anything custom).
+            // Each attribute's properties are determined by the fields in the eav_attribute table
+            // plus the fields in catalog_eav_attribute.
+            //
+            // Additionally, attributes may have to be referenced in
+            // eav_attribute_group and eav_entity_attribute
+
             /** @var string[] $values */
             $values = [
-                'attribute_id'   => $row['_entity_id'],
-                'entity_type_id' => $this->getEntityTypeId(),
+                'attribute_id'   => $row['_entity_id'], // = pimgento_entities.entity_id
+                'entity_type_id' => $this->getEntityTypeId(), // value: "4", for catalog_product
                 'attribute_code' => $row['code'],
             ];
+
+            // Insert/update basic data in primary EAV attribute table.
             $connection->insertOnDuplicate(
                 $this->entitiesHelper->getTable('eav_attribute'),
                 $values,
                 array_keys($values)
             );
 
+            // Insert/update PK in primary EAV attribute table.
             $values = [
                 'attribute_id' => $row['_entity_id'],
             ];
@@ -327,6 +368,8 @@ class Attribute extends Import
                 $values,
                 array_keys($values)
             );
+
+            // Prepare additional data for both tables.
 
             /* Retrieve default admin label */
             /** @var array $stores */
@@ -366,6 +409,7 @@ class Attribute extends Import
             $defaultValues = [];
             if ($row['_is_new'] == 1) {
                 $defaultValues = [
+                    // For insert into eav_attribute.
                     'backend_table'                 => null,
                     'frontend_class'                => null,
                     'is_required'                   => 0,
@@ -373,6 +417,7 @@ class Attribute extends Import
                     'default_value'                 => null,
                     'is_unique'                     => $row['unique'],
                     'note'                          => null,
+                    // For insert into catalog_eav_attribute.
                     'is_visible'                    => 1,
                     'is_system'                     => 1,
                     'input_filter'                  => null,
@@ -402,10 +447,16 @@ class Attribute extends Import
 
                 foreach (array_keys($columns) as $column) {
                     $data[$column] = $row[$column];
+                    // $data : for insertion into eav_attribute and catalog_eav_attribute.
+                    // $row: read from tmp_pimgento_entities_attribute.
                 }
             }
 
+            // Set default values for data keys that are not columns of tmp_pimgento_entities_attribute.
             $data = array_merge($defaultValues, $data);
+
+            // Update both tables at once.
+
             $this->eavSetup->updateAttribute(
                 $this->getEntityTypeId(),
                 $row['_entity_id'],

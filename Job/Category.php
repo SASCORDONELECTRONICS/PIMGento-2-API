@@ -53,6 +53,43 @@ class Category extends Import
      */
     protected $cacheTypeList;
     /**
+     * Category constructor
+     *
+     * @param OutputHelper $outputHelper
+     * @param ManagerInterface $eventManager
+     * @param Authenticator $authenticator
+     * @param \Psr\Log\LoggerInterface $logger
+     * @param TypeListInterface $cacheTypeList
+     * @param Entities $entitiesHelper
+     * @param StoreHelper $storeHelper
+     * @param ConfigHelper $configHelper
+     * @param CategoryModel $categoryModel
+     * @param CategoryUrlPathGenerator $categoryUrlPathGenerator
+     * @param array $data
+     */
+    public function __construct(
+        OutputHelper $outputHelper,
+        ManagerInterface $eventManager,
+        Authenticator $authenticator,
+        \Psr\Log\LoggerInterface $logger,
+        TypeListInterface $cacheTypeList,
+        Entities $entitiesHelper,
+        StoreHelper $storeHelper,
+        ConfigHelper $configHelper,
+        CategoryModel $categoryModel,
+        CategoryUrlPathGenerator $categoryUrlPathGenerator,
+        array $data = []
+    ) {
+        parent::__construct($outputHelper, $eventManager, $authenticator, $logger, $data);
+
+        $this->storeHelper    = $storeHelper;
+        $this->entitiesHelper = $entitiesHelper;
+        $this->cacheTypeList  = $cacheTypeList;
+        $this->configHelper   = $configHelper;
+        $this->categoryModel  = $categoryModel;
+        $this->categoryUrlPathGenerator = $categoryUrlPathGenerator;
+    }
+    /**
      * This variable contains an Entities
      *
      * @var Entities $entitiesHelper
@@ -76,48 +113,13 @@ class Category extends Import
      * @var CategoryModel $categoryModel
      */
     protected $categoryModel;
+
     /**
      * This variable containsCategoryUrlPathGenerator
      *
      * @var CategoryUrlPathGenerator $categoryUrlPathGenerator
      */
     protected $categoryUrlPathGenerator;
-
-    /**
-     * Category constructor
-     *
-     * @param OutputHelper $outputHelper
-     * @param ManagerInterface $eventManager
-     * @param Authenticator $authenticator
-     * @param TypeListInterface $cacheTypeList
-     * @param Entities $entitiesHelper
-     * @param StoreHelper $storeHelper
-     * @param ConfigHelper $configHelper
-     * @param CategoryModel $categoryModel
-     * @param CategoryUrlPathGenerator $categoryUrlPathGenerator
-     * @param array $data
-     */
-    public function __construct(
-        OutputHelper $outputHelper,
-        ManagerInterface $eventManager,
-        Authenticator $authenticator,
-        TypeListInterface $cacheTypeList,
-        Entities $entitiesHelper,
-        StoreHelper $storeHelper,
-        ConfigHelper $configHelper,
-        CategoryModel $categoryModel,
-        CategoryUrlPathGenerator $categoryUrlPathGenerator,
-        array $data = []
-    ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
-
-        $this->storeHelper    = $storeHelper;
-        $this->entitiesHelper = $entitiesHelper;
-        $this->cacheTypeList  = $cacheTypeList;
-        $this->configHelper   = $configHelper;
-        $this->categoryModel  = $categoryModel;
-        $this->categoryUrlPathGenerator = $categoryUrlPathGenerator;
-    }
 
     /**
      * Create temporary table for family import
@@ -541,6 +543,9 @@ class Category extends Import
              * @var array $store
              */
             foreach ($affected as $store) {
+                if (!$store['store_id']) {
+                    continue;
+                }
                 /** @var \Magento\Framework\DB\Select $select */
                 $select = $connection->select()
                     ->from(

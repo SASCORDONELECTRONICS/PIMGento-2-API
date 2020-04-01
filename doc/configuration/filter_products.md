@@ -1,11 +1,11 @@
 # Filter Products
 
-Configuration is available in Magento 2 back-office under :
+Configuration is available in Magento 2 back-office under:
 * Stores > Catalog > Pimgento > Filter products
 
 | Configuration                 | Usage                                                                      |
 |-------------------------------|----------------------------------------------------------------------------|
-| Mode                          | Choose your method to filter product data : Standard or Advanced           |
+| Mode                          | Choose your method to filter product data: Standard or Advanced           |
 
 ### Advanced
 

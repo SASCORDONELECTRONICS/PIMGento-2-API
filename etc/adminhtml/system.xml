@@ -176,29 +176,40 @@ For example :<br/>
             </group>
             <group id="product" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Products</label>
-                <field id="attribute_mapping" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Attribute Mapping</label>
+                <field id="attribute_mapping_simple" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Simple Product Attribute Mapping</label>
                     <frontend_model>Pimgento\Api\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Fill additional Magento attributes from Pim attributes</comment>
+                    <comment>For Simple Products, Fill additional Magento attributes from Pim attributes</comment>
                 </field>
-                <field id="tax_class" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="attribute_mapping_configurable" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Configurable Product Attribute Mapping</label>
+                    <frontend_model>Pimgento\Api\Block\Adminhtml\System\Config\Form\Field\Attribute</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment>For Configurable Products, fill additional Magento attributes from Pim attributes</comment>
+                </field>
+                <field id="enable_configurables_in_store" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Configurable Products</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Enable imported Configurable Products in Magento Store</comment>
+                </field>
+                <field id="tax_class" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Default Tax Class</label>
                     <frontend_model>Pimgento\Api\Block\Adminhtml\System\Config\Form\Field\Tax</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Set up default tax class for website</comment>
                 </field>
-                <field id="configurable_attributes" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="configurable_attributes" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Configurable</label>
                     <frontend_model>Pimgento\Api\Block\Adminhtml\System\Config\Form\Field\Configurable</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>Fill configurable attributes with default value, leave blank to take simple product value or variant value if exists</comment>
                 </field>
-                <field id="media_enabled" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="media_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import Media Files</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="media_gallery" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="media_gallery" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>PIM Images Attributes</label>
                     <frontend_model>Pimgento\Api\Block\Adminhtml\System\Config\Form\Field\Gallery</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -206,7 +217,7 @@ For example :<br/>
                         <field id="media_enabled">1</field>
                     </depends>
                 </field>
-                <field id="media_images" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="media_images" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Product Images Mapping</label>
                     <frontend_model>Pimgento\Api\Block\Adminhtml\System\Config\Form\Field\Image</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -214,14 +225,14 @@ For example :<br/>
                         <field id="media_enabled">1</field>
                     </depends>
                 </field>
-                <field id="asset_enabled" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="asset_enabled" translate="label" type="select" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import Asset Files</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <depends>
                         <field id="*/akeneo_api/is_enterprise">1</field>
                     </depends>
                 </field>
-                <field id="asset_gallery" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="asset_gallery" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>PIM Asset Attributes</label>
                     <frontend_model>Pimgento\Api\Block\Adminhtml\System\Config\Form\Field\Gallery</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
@@ -229,6 +240,10 @@ For example :<br/>
                         <field id="asset_enabled">1</field>
                         <field id="*/akeneo_api/is_enterprise">1</field>
                     </depends>
+                </field>
+                <field id="url_generation_enabled" translate="label" type="select" sortOrder="110" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Regenerate url rewrites</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
         </section>

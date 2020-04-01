@@ -101,6 +101,10 @@ abstract class Import extends DataObject implements ImportInterface
      * @var bool $isEnterprise
      */
     protected $isEnterprise = false;
+    /**
+     * @var \Psr\Log\LoggerInterface $logger
+     */
+    public $logger;
 
     /**
      * Import constructor.
@@ -108,12 +112,14 @@ abstract class Import extends DataObject implements ImportInterface
      * @param OutputHelper $outputHelper
      * @param ManagerInterface $eventManager
      * @param Authenticator $authenticator
+     * @param \Psr\Log\LoggerInterface $logger
      * @param array $data
      */
     public function __construct(
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
+        \Psr\Log\LoggerInterface $logger,
         array $data = []
     ) {
         parent::__construct($data);
@@ -123,6 +129,7 @@ abstract class Import extends DataObject implements ImportInterface
         } catch (\Exception $e) {
             $this->akeneoClient = false;
         }
+        $this->logger = $logger;
         $this->outputHelper = $outputHelper;
         $this->eventManager = $eventManager;
         $this->step         = 0;
@@ -522,5 +529,23 @@ abstract class Import extends DataObject implements ImportInterface
     public function isImportEnterprise()
     {
         return $this->isEnterprise;
+    }
+
+    /**
+     * Pick up the Import job from the specified step.
+     * The step's number can be found under its "name" attribute in etc/di.xml
+     *
+     * @param int $step
+     */
+    public function runFromStep($step)
+    {
+        $this->step = $step;
+        do  {
+            $response = $this->execute();
+        } while (
+            !empty($response['message'])
+            && $response['status']
+            && $response['continue']
+        );
     }
 }

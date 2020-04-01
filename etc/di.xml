@@ -23,6 +23,7 @@
                 <item name="product_model" xsi:type="string">\Pimgento\Api\Job\ProductModel</item>
                 <item name="family_variant" xsi:type="string">\Pimgento\Api\Job\FamilyVariant</item>
                 <item name="product" xsi:type="string">\Pimgento\Api\Job\Product</item>
+                <item name="image" xsi:type="string">\Pimgento\Api\Job\Image</item>
             </argument>
         </arguments>
     </type>
@@ -127,6 +128,7 @@
 
     <type name="Pimgento\Api\Job\FamilyVariant">
         <arguments>
+            <argument name="attributeJob" xsi:type="object">\Pimgento\Api\Job\Attribute</argument>
             <argument name="data" xsi:type="array">
                 <item name="steps" xsi:type="array">
                     <item name="1" xsi:type="array">
@@ -138,14 +140,22 @@
                         <item name="comment" xsi:type="string">Fill temporary table</item>
                     </item>
                     <item name="3" xsi:type="array">
-                        <item name="method" xsi:type="string">updateAxis</item>
-                        <item name="comment" xsi:type="string">Update Axis column</item>
+                        <item name="method" xsi:type="string">updateAxisCodes</item>
+                        <item name="comment" xsi:type="string">Update Axis Codes column</item>
                     </item>
                     <item name="4" xsi:type="array">
+                        <item name="method" xsi:type="string">forkMetricAttributes</item>
+                        <item name="comment" xsi:type="string">Enrich axes with forks of PIM metric attributes</item>
+                    </item>
+                    <item name="5" xsi:type="array">
+                        <item name="method" xsi:type="string">updateAxisIds</item>
+                        <item name="comment" xsi:type="string">Update Axis column where axes are identified by their ID</item>
+                    </item>
+                    <item name="6" xsi:type="array">
                         <item name="method" xsi:type="string">updateProductModel</item>
                         <item name="comment" xsi:type="string">Update Product Model</item>
                     </item>
-                    <item name="5" xsi:type="array">
+                    <item name="7" xsi:type="array">
                         <item name="method" xsi:type="string">dropTable</item>
                         <item name="comment" xsi:type="string">Drop temporary table</item>
                     </item>
@@ -271,83 +281,146 @@
 
     <type name="Pimgento\Api\Job\Product">
         <arguments>
+            <argument name="optionJob" xsi:type="object">Pimgento\Api\Job\Option</argument>
+            <!--<argument name="productModelJob" xsi:type="object">Pimgento\Api\Job\ProductModel</argument>-->
+            <!--<argument name="familyVariantJob" xsi:type="object">Pimgento\Api\Job\FamilyVariant</argument>-->
+            <argument name="data" xsi:type="array">
+                <item name="steps" xsi:type="array">
+                    <item name="1" xsi:type="array">
+                        <item name="method" xsi:type="string">createTables</item>
+                        <item name="comment" xsi:type="string">Create the Product and Low-Level-Configurable temporary tables</item>
+                    </item>
+                    <item name="2" xsi:type="array">
+                        <item name="method" xsi:type="string">insertProductData</item>
+                        <item name="comment" xsi:type="string">Fill the Product temporary table</item>
+                    </item>
+                    <item name="3" xsi:type="array">
+                        <item name="method" xsi:type="string">importForkedAttributeOptions</item>
+                        <item name="comment" xsi:type="string">Import options for forked metric attributes</item>
+                    </item>
+                    <item name="4" xsi:type="array">
+                        <item name="method" xsi:type="string">addRequiredData</item>
+                        <item name="comment" xsi:type="string">Enrich temporary tables before processing</item>
+                    </item>
+                    <item name="5" xsi:type="array">
+                        <item name="method" xsi:type="string">mapAttributesForSimpleProducts</item>
+                        <item name="comment" xsi:type="string">Map PIM attributes to Magento attributes for simple products</item>
+                    </item>
+                    <item name="6" xsi:type="array">
+                        <item name="method" xsi:type="string">insertLowLevelConfigurableData</item>
+                        <item name="comment" xsi:type="string">Identify low-level configurables</item>
+                    </item>
+                    <item name="7" xsi:type="array">
+                        <item name="method" xsi:type="string">mapAttributesForConfigurables</item>
+                        <item name="comment" xsi:type="string">Map PIM attributes to Magento attributes for configurables products</item>
+                    </item>
+                    <item name="8" xsi:type="array">
+                        <item name="method" xsi:type="string">insertTopLevelConfigurableData</item>
+                        <item name="comment" xsi:type="string">Identify top-level configurables</item>
+                    </item>
+                    <item name="9" xsi:type="array">
+                        <item name="method" xsi:type="string">addAttributeLocalColumns</item>
+                        <item name="comment" xsi:type="string">For mapped attributes, add a column for each store</item>
+                    </item>
+                    <item name="10" xsi:type="array">
+                        <item name="method" xsi:type="string">matchEntities</item>
+                        <item name="comment" xsi:type="string">Match code with Magento ID</item>
+                    </item>
+                    <item name="11" xsi:type="array">
+                        <item name="method" xsi:type="string">updateAttributeSetId</item>
+                        <item name="comment" xsi:type="string">Match family code with Magento ID</item>
+                    </item>
+                    <item name="12" xsi:type="array">
+                        <item name="method" xsi:type="string">updateOption</item>
+                        <item name="comment" xsi:type="string">Update column values for options</item>
+                    </item>
+                    <item name="13" xsi:type="array">
+                        <item name="method" xsi:type="string">createEntities</item>
+                        <item name="comment" xsi:type="string">Create or update product entities</item>
+                    </item>
+                    <item name="14" xsi:type="array">
+                        <item name="method" xsi:type="string">setValues</item>
+                        <item name="comment" xsi:type="string">Set values to attributes</item>
+                    </item>
+                    <item name="15" xsi:type="array">
+                        <item name="method" xsi:type="string">linkConfigurable</item>
+                        <item name="comment" xsi:type="string">Link configurable with children</item>
+                    </item>
+                    <item name="16" xsi:type="array">
+                        <item name="method" xsi:type="string">setWebsites</item>
+                        <item name="comment" xsi:type="string">Set products to websites</item>
+                    </item>
+                    <item name="17" xsi:type="array">
+                        <item name="method" xsi:type="string">setCategories</item>
+                        <item name="comment" xsi:type="string">Set products to categories</item>
+                    </item>
+                    <item name="18" xsi:type="array">
+                        <item name="method" xsi:type="string">initStock</item>
+                        <item name="comment" xsi:type="string">Init stock</item>
+                    </item>
+                    <item name="19" xsi:type="array">
+                        <item name="method" xsi:type="string">setRelated</item>
+                        <item name="comment" xsi:type="string">Update related, up-sell and cross-sell products</item>
+                    </item>
+                    <item name="20" xsi:type="array">
+                        <item name="method" xsi:type="string">setUrlRewrite</item>
+                        <item name="comment" xsi:type="string">Set Url Rewrite</item>
+                    </item>
+                    <item name="21" xsi:type="array">
+                        <item name="method" xsi:type="string">importMedia</item>
+                        <item name="comment" xsi:type="string">Import media files</item>
+                    </item>
+                    <item name="22" xsi:type="array">
+                        <item name="method" xsi:type="string">importAsset</item>
+                        <item name="comment" xsi:type="string">Import asset files</item>
+                    </item>
+                    <item name="23" xsi:type="array">
+                        <item name="method" xsi:type="string">dropTable</item>
+                        <item name="comment" xsi:type="string">Drop temporary table</item>
+                    </item>
+                    <item name="24" xsi:type="array">
+                        <item name="method" xsi:type="string">cleanCache</item>
+                        <item name="comment" xsi:type="string">Clean cache</item>
+                    </item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Pimgento\Api\Job\Image">
+        <arguments>
             <argument name="data" xsi:type="array">
                 <item name="steps" xsi:type="array">
                     <item name="1" xsi:type="array">
                         <item name="method" xsi:type="string">createTable</item>
-                        <item name="comment" xsi:type="string">Create temporary table</item>
+                        <item name="comment" xsi:type="string">Create the Image temporary tables</item>
                     </item>
                     <item name="2" xsi:type="array">
-                        <item name="method" xsi:type="string">insertData</item>
-                        <item name="comment" xsi:type="string">Fill temporary table</item>
+                        <item name="method" xsi:type="string">insertProductData</item>
+                        <item name="comment" xsi:type="string">Insert product into temporary tables</item>
                     </item>
                     <item name="3" xsi:type="array">
-                        <item name="method" xsi:type="string">addRequiredData</item>
-                        <item name="comment" xsi:type="string">Add required data</item>
+                        <item name="method" xsi:type="string">importForkedAttributeOptions</item>
+                        <item name="comment" xsi:type="string">Import options for forked metric attributes</item>
                     </item>
                     <item name="4" xsi:type="array">
-                        <item name="method" xsi:type="string">createConfigurable</item>
-                        <item name="comment" xsi:type="string">Create configurables</item>
+                        <item name="method" xsi:type="string">addRequiredData</item>
+                        <item name="comment" xsi:type="string">Enrich temporary tables before processing</item>
                     </item>
                     <item name="5" xsi:type="array">
+                        <item name="method" xsi:type="string">mapAttributesForSimpleProducts</item>
+                        <item name="comment" xsi:type="string">Map PIM attributes to Magento attributes for simple products</item>
+                    </item>
+                    <item name="7" xsi:type="array">
                         <item name="method" xsi:type="string">matchEntities</item>
                         <item name="comment" xsi:type="string">Match code with Magento ID</item>
                     </item>
-                    <item name="6" xsi:type="array">
-                        <item name="method" xsi:type="string">updateAttributeSetId</item>
-                        <item name="comment" xsi:type="string">Match family code with Magento ID</item>
-                    </item>
-                    <item name="7" xsi:type="array">
-                        <item name="method" xsi:type="string">updateOption</item>
-                        <item name="comment" xsi:type="string">Update column values for options</item>
-                    </item>
                     <item name="8" xsi:type="array">
-                        <item name="method" xsi:type="string">createEntities</item>
-                        <item name="comment" xsi:type="string">Create or update product entities</item>
+                        <item name="method" xsi:type="string">importImages</item>
+                        <item name="comment" xsi:type="string">Import image</item>
                     </item>
                     <item name="9" xsi:type="array">
-                        <item name="method" xsi:type="string">setValues</item>
-                        <item name="comment" xsi:type="string">Set values to attributes</item>
-                    </item>
-                    <item name="10" xsi:type="array">
-                        <item name="method" xsi:type="string">linkConfigurable</item>
-                        <item name="comment" xsi:type="string">Link configurable with children</item>
-                    </item>
-                    <item name="11" xsi:type="array">
-                        <item name="method" xsi:type="string">setWebsites</item>
-                        <item name="comment" xsi:type="string">Set products to websites</item>
-                    </item>
-                    <item name="12" xsi:type="array">
-                        <item name="method" xsi:type="string">setCategories</item>
-                        <item name="comment" xsi:type="string">Set products to categories</item>
-                    </item>
-                    <item name="13" xsi:type="array">
-                        <item name="method" xsi:type="string">initStock</item>
-                        <item name="comment" xsi:type="string">Init stock</item>
-                    </item>
-                    <item name="14" xsi:type="array">
-                        <item name="method" xsi:type="string">setRelated</item>
-                        <item name="comment" xsi:type="string">Update related, up-sell and cross-sell products</item>
-                    </item>
-                    <item name="15" xsi:type="array">
-                        <item name="method" xsi:type="string">setUrlRewrite</item>
-                        <item name="comment" xsi:type="string">Set Url Rewrite</item>
-                    </item>
-                    <item name="16" xsi:type="array">
-                        <item name="method" xsi:type="string">importMedia</item>
-                        <item name="comment" xsi:type="string">Import media files</item>
-                    </item>
-                    <item name="17" xsi:type="array">
-                        <item name="method" xsi:type="string">importAsset</item>
-                        <item name="comment" xsi:type="string">Import asset files</item>
-                    </item>
-                    <item name="18" xsi:type="array">
                         <item name="method" xsi:type="string">dropTable</item>
                         <item name="comment" xsi:type="string">Drop temporary table</item>
-                    </item>
-                    <item name="19" xsi:type="array">
-                        <item name="method" xsi:type="string">cleanCache</item>
-                        <item name="comment" xsi:type="string">Clean cache</item>
                     </item>
                 </item>
             </argument>

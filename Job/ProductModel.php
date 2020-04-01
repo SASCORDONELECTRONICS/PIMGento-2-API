@@ -67,6 +67,7 @@ class ProductModel extends Import
      * @param OutputHelper                        $outputHelper
      * @param ManagerInterface                    $eventManager
      * @param Authenticator                       $authenticator
+     * @param \Psr\Log\LoggerInterface            $logger
      * @param \Pimgento\Api\Helper\Import\Product $entitiesHelper
      * @param ConfigHelper                        $configHelper
      * @param Config                              $eavConfig
@@ -76,12 +77,13 @@ class ProductModel extends Import
         OutputHelper $outputHelper,
         ManagerInterface $eventManager,
         Authenticator $authenticator,
+        \Psr\Log\LoggerInterface $logger,
         \Pimgento\Api\Helper\Import\Product $entitiesHelper,
         ConfigHelper $configHelper,
         Config $eavConfig,
         array $data = []
     ) {
-        parent::__construct($outputHelper, $eventManager, $authenticator, $data);
+        parent::__construct($outputHelper, $eventManager, $authenticator, $logger, $data);
 
         $this->entitiesHelper  = $entitiesHelper;
         $this->configHelper    = $configHelper;
@@ -144,7 +146,7 @@ class ProductModel extends Import
         $connection = $this->entitiesHelper->getConnection();
         /** @var array $except */
         $except = ['code', 'axis'];
-        /** @var array $variantTable */
+        /** @var string $variantTable */
         $variantTable = $this->entitiesHelper->getTable('pimgento_product_model');
         /** @var array $columns */
         $columns = array_keys($connection->describeTable($variantTable));
@@ -170,7 +172,7 @@ class ProductModel extends Import
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
         /** @var array $except */
         $except = ['code', 'axis', 'type', '_entity_id', '_is_new'];
-        /** @var array $variantTable */
+        /** @var string $variantTable */
         $variantTable = $this->entitiesHelper->getTable('pimgento_product_model');
         /** @var array $columns */
         $columns = array_keys($connection->describeTable($tmpTable));
@@ -202,13 +204,15 @@ class ProductModel extends Import
         $connection = $this->entitiesHelper->getConnection();
         /** @var array $tmpTable */
         $tmpTable = $this->entitiesHelper->getTableName($this->getCode());
-        /** @var array $variantTable */
+        /** @var string $variantTable */
         $variantTable = $this->entitiesHelper->getTable('pimgento_product_model');
         /** @var array $variant */
         $variant = $connection->query(
             $connection->select()->from($tmpTable)
         );
         /** @var array $attributes */
+        // $attributes contains key=>value pairs of the type 'color'=>'93'
+        // listing variation axes.
         $attributes = $connection->fetchPairs(
             $connection->select()->from(
                 $this->entitiesHelper->getTable('eav_attribute'),
@@ -218,6 +222,8 @@ class ProductModel extends Import
         /** @var array $columns */
         $columns = array_keys($connection->describeTable($tmpTable));
         /** @var array $values */
+        // Each element of $values stores the column values of a row of the temporary table tmp_pimgento_entities_product_model,
+        // Each element is an array key=>value pairs, of the type 'column name'=>'column value'.
         $values = [];
         /** @var int $i */
         $i = 0;
@@ -233,6 +239,7 @@ class ProductModel extends Import
                     }
                     if ($column == 'axis' && !$connection->tableColumnExists($tmpTable, 'family_variant')) {
                         /** @var array $axisAttributes */
+                        // $axisAttributes might hold an array of codes, such as ['93', '141', '149'].
                         $axisAttributes = explode(',', $row['axis']);
                         /** @var array $axis */
                         $axis = [];
@@ -242,11 +249,16 @@ class ProductModel extends Import
                                 $axis[] = $attributes[$code];
                             }
                         }
+                        // $axis might hold a String listing variation axes such as '93, 141, 149'.
+                        // The point of the processing above was to keep only variation axes
+                        // that pertain to a catalog_product, filtering out others (e.g. for instance
+                        // attributes pertaining to a customer or an order.
                         $values[$i][$column] = join(',', $axis);
                     }
                     $keys = array_keys($values[$i]);
                 }
             }
+            // Insertion into pimgento_product_model.
             $i++;
             if (count($values) > self::BATCH_SIZE) {
                 $connection->insertOnDuplicate($variantTable, $values, $keys);

@@ -26,6 +26,9 @@
                 <completeness_value>100</completeness_value>
                 <status>1</status>
             </products_filters>
+            <product>
+                <url_generation_enabled>1</url_generation_enabled>
+            </product>
         </pimgento>
     </default>
 </config>

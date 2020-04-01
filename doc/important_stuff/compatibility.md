@@ -8,7 +8,7 @@ Akeneo
 Magento2
 --------
 
-* PIMGento2 (API) is compatible with Magento 2 following this schema :
+* PIMGento2 (API) is compatible with Magento 2 following this schema:
 
 | Magento Version | PIMGento2 (API) Version |
 |-----------------|-------------------------|

@@ -1,6 +1,6 @@
 # PIMGento2 (API) Documentation summary
 
-Just click on the section you want to go in !
+Just click on the section you want to go in!
 
 I. Important stuff
 ------------------
