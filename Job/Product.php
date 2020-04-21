@@ -1197,7 +1197,8 @@ class Product extends Import
                 $data,
                 $entityTypeId,
                 $storeId,
-                AdapterInterface::INSERT_ON_DUPLICATE
+                AdapterInterface::INSERT_ON_DUPLICATE,
+                $this->configHelper->isUrlGenerationEnabled()
             );
         }
     }
@@ -2025,7 +2026,7 @@ class Product extends Import
             }
 
             /** @var \Magento\Framework\DB\Select $cleaner */
-            $cleaner = $connection->select()
+            /*$cleaner = $connection->select()
                 ->from($galleryTable, ['value_id'])
                 ->where('value NOT IN (?)', $files);
 
@@ -2035,7 +2036,7 @@ class Product extends Import
                     'value_id IN (?)'          => $cleaner,
                     $columnIdentifier . ' = ?' => $row[$columnIdentifier]
                 ]
-            );
+            );*/
         }
     }
 

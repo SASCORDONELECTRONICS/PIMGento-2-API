@@ -1,5 +1,8 @@
 # PIMGento 2 API change Log
 
+# Changed
+- Do not remove url_key and image when product script run [#27](https://gitlab-si.cordonweb.com/webagency/second_life/second_life_sales/cadaoz_store/-/issues/27)
+
 ### [2.0.1] - 2020-01-04
 # Fixed
 - Remove version in composer.json
