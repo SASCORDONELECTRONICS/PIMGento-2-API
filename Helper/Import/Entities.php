@@ -456,14 +456,15 @@ class Entities extends AbstractHelper
      *
      * @param string $import
      * @param string $entityTable
-     * @param array  $values
-     * @param int    $entityTypeId
-     * @param int    $storeId
-     * @param int    $mode
+     * @param array $values
+     * @param int $entityTypeId
+     * @param int $storeId
+     * @param int $mode
+     * @param bool $force
      *
      * @return \Pimgento\Api\Helper\Import\Entities
      */
-    public function setValues($import, $entityTable, $values, $entityTypeId, $storeId, $mode = AdapterInterface::INSERT_ON_DUPLICATE)
+    public function setValues($import, $entityTable, $values, $entityTypeId, $storeId, $mode = AdapterInterface::INSERT_ON_DUPLICATE, $force = false)
     {
         /** @var \Magento\Framework\DB\Adapter\AdapterInterface $connection */
         $connection = $this->getConnection();
@@ -514,7 +515,6 @@ class Entities extends AbstractHelper
                         'value'          => $value,
                     ]
                 );
-
             /** @var string $insert */
             $insert = $connection->insertFromSelect(
                 $select,
@@ -522,6 +522,16 @@ class Entities extends AbstractHelper
                 ['attribute_id', 'store_id', $identifier, 'value'],
                 $mode
             );
+
+            if(!$force && ($entityTable === 'catalog_product_entity' && $code === 'url_key')) {
+                $insert = $connection->insertFromSelect(
+                    $select,
+                    $this->getTable($entityTable . '_' . $backendType),
+                    ['attribute_id', 'store_id', $identifier, 'value'],
+                    AdapterInterface::INSERT_IGNORE
+                );
+            }
+
             $connection->query($insert);
 
             if ($backendType === 'datetime') {
