@@ -1,15 +1,18 @@
 # PIMGento 2 API change Log
 
-### [2.0.2] - 2020-04-22
-# Changed
+### Changed
+- Update php version compatibility
+
+## [2.0.2] - 2020-04-22
+### Changed
 - Do not remove url_key and image when product script run [#27](https://gitlab-si.cordonweb.com/webagency/second_life/second_life_sales/cadaoz_store/-/issues/27)
 
-### [2.0.1] - 2020-04-01
-# Fixed
+## [2.0.1] - 2020-04-01
+### Fixed
 - Remove version in composer.json
 
-### [2.0.0] - 2020-04-01
-# Added
+## [2.0.0] - 2020-04-01
+### Added
 - Import image button [#41](https://gitlab-si.cordonweb.com/webagency/pim/PIMGento/issues/41)
 - Import Image process [#44](https://gitlab-si.cordonweb.com/webagency/pim/PIMGento/issues/44)
 
