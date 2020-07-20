@@ -1,5 +1,6 @@
 # PIMGento 2 API change Log
 
+## [2.0.3] - 2020-07-20
 ### Changed
 - Update php version compatibility
 
